@@ -1,12 +1,13 @@
 const client = require('./client');
 const {getUserByUsername} = require('./users')
 async function getRoutineById(id){
-  const { rows } = await client.query(`
+  const { rows: [routine] } = await client.query(`
     SELECT *
     FROM routines
     WHERE id = $1
     ;
   `, [id])
+  return routine
 }
 
 async function getRoutinesWithoutActivities(){
@@ -17,7 +18,7 @@ async function getAllRoutines() {
     SELECT *
     FROM routines;
   `)
-  console.log(rows)
+  return rows
 }
 
 async function getAllRoutinesByUser({username}) {
@@ -29,18 +30,19 @@ async function getAllRoutinesByUser({username}) {
     WHERE "creatorId" = $1
     ;
   `, [id])
-  console.log(rows)
+  return rows
 }
 
 async function getPublicRoutinesByUser({username}) {
   const {id} = getUserByUsername(username);
-  const { rows } = await client.query(`
+  const { rows: publicRoutines } = await client.query(`
     SELECT *
     FROM routines
     WHERE "creatorId" = $1
     AND WHERE "isPublic" = true
     ;
   `, [id])
+  return publicRoutines
 }
 
 async function getAllPublicRoutines() {
@@ -50,19 +52,26 @@ async function getAllPublicRoutines() {
     WHERE "isPublic" = true
     ;
   `)
+  return rows;
 }
 
 async function getPublicRoutinesByActivity({id}) {
 }
 
 async function createRoutine({creatorId, isPublic, name, goal}) {
-  await client.query(`
+  const { rows: [newRoutine] } = await client.query(`
     INSERT INTO routines("creatorId", "isPublic", name, goal)
     VALUES ($1, $2, $3, $4)
   `, [creatorId, isPublic, name, goal])
+  return newRoutine;
 }
 
 async function updateRoutine({id, ...fields}) {
+  console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',fields)
+  // const { rows: [updatedRoutine] } = await client.query(`
+  //   UPDATE routines
+  //   SET 
+  // `)
 }
 
 async function destroyRoutine(id) {

@@ -21,14 +21,16 @@ async function getAllActivities() {
 async function getActivityById(id) {
 
   try {
-    const {rows: singleActivity} = await client.query(`
-    SELECT "id"
+    const {rows: [activity]} = await client.query(`
+    SELECT *
     FROM activities 
-    WHERE activities.id = ${id};
-  `);
+    WHERE id = VALUES ($1)
+  `, [id]);
 
+  
+  console.log('ID ----->', id);
   console.log('Rows, getActivityById------->>>>>>>>>>' , singleActivity );
-  return singleActivity
+  return activity
   } catch (error) {
     console.log('error in getActivityById', error);
   }
@@ -44,6 +46,7 @@ async function getActivityByName(name) {
     WHERE "name" = ${name};
   `);
 
+  
   console.log('activityByName ----->>>>', activityByName);
   return activityByName
 
@@ -70,7 +73,7 @@ async function attachActivitiesToRoutines(routines) {
 async function createActivity({ name, description }) {
 
   try {
-    const {rows: activity} = await client.query(`
+    const {rows: [activity]} = await client.query(`
       INSERT INTO activities (name,description)
       VALUES ($1, $2)
       RETURNING name, description;

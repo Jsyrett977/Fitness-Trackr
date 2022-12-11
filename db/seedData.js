@@ -102,7 +102,7 @@ async function createInitialActivities() {
     ]
     const activities = await Promise.all(activitiesToCreate.map(createActivity))
 
-    // console.log("activities created:")
+    console.log("activities created:")
     // console.log(activities)
 
     console.log("Finished creating activities!")

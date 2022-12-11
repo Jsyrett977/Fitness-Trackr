@@ -16,7 +16,7 @@ async function createUser({ username, password }) {
     RETURNING id, username;
     `, [username, hashedPassword]);
     
-    // console.log('user ---->>>>', user);
+    console.log('user ---->>>>', user);
     return user;
   } catch (error) {
     console.log("Error creating user");

@@ -53,16 +53,16 @@ async function getActivityByName(name) {
 
 // select and return an array of all activities
 async function attachActivitiesToRoutines(routines) {
-  const { rows } = await client.query(`
-        SELECT *
-        FROM activities 
-        JOIN routines 
-          ON activity.id 
-        = routines.id;
-    `);
+  // const { rows } = await client.query(`
+  //       SELECT *
+  //       FROM activities 
+  //       JOIN routines 
+  //         ON activity.id 
+  //       = routines.id;
+  //   `);
 
-  console.log("joined table ----->>>>", rows);
-  return rows;
+  // console.log("joined table ----->>>>", rows);
+  // return rows;
 }
 
 // return the new activity

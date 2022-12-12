@@ -2,9 +2,8 @@
 const { createActivity,   
         getAllActivities,
         createUser,
-        getUser,
-        getUserById,
-        getUserByUsername} = require('./');
+        getActivityById
+        } = require('./');
 const client = require("./client")
 
 async function dropTables() {
@@ -69,8 +68,8 @@ async function createInitialUsers() {
     ]
     const users = await Promise.all(usersToCreate.map(createUser))
 
-    // console.log("Users created:")
-    // console.log(users)
+    console.log("Users created:")
+    console.log(users)
     console.log("Finished creating users!")
   } catch (error) {
     console.error("Error creating users!")
@@ -103,7 +102,7 @@ async function createInitialActivities() {
     const activities = await Promise.all(activitiesToCreate.map(createActivity))
 
     console.log("activities created:")
-    // console.log(activities)
+    console.log(activities)
 
     console.log("Finished creating activities!")
   } catch (error) {
@@ -217,6 +216,8 @@ async function createInitialRoutineActivities() {
   console.log("routine_activities created: ", routineActivities)
   console.log("Finished creating routine_activities!")
 }
+
+
 
 async function rebuildDB() {
   try {

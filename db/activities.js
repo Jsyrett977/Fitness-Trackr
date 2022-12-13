@@ -27,7 +27,7 @@ async function getActivityById(id) {
   `, [id]);
 
 
-    console.log("{activityById ------>>>>>>>>>>",activityById);
+    // console.log("{activityById ------>>>>>>>>>>",activityById);
     return activityById;
   } catch (error) {
     console.log("error in getActivityById", error);
@@ -36,7 +36,6 @@ async function getActivityById(id) {
 
 async function getActivityByName(name) {
 
-  console.log("activityByName", name);
   try {
     const { rows: [activityByName] } = await client.query(`
     SELECT *
@@ -53,6 +52,7 @@ async function getActivityByName(name) {
 
 // select and return an array of all activities
 async function attachActivitiesToRoutines(routines) {
+  
   // const { rows } = await client.query(`
   //       SELECT *
   //       FROM activities 
@@ -60,6 +60,8 @@ async function attachActivitiesToRoutines(routines) {
   //         ON activity.id 
   //       = routines.id;
   //   `);
+
+
 
   // console.log("joined table ----->>>>", rows);
   // return rows;
@@ -79,7 +81,7 @@ async function createActivity({ name, description }) {
       [name, description]
     );
 
-    console.log('createActivity ---->>>>>>', activity);
+    // console.log('createActivity ---->>>>>>', activity);
     return activity;
   } catch (error) {
     console.log("error in createActivity", error);
@@ -90,7 +92,24 @@ async function createActivity({ name, description }) {
 // don't try to update the id
 // do update the name and description
 // return the updated activity
-async function updateActivity({ id, ...fields }) {}
+async function updateActivity({ id, ...fields }) {
+
+  // console.log('fields ---->>>', fields);
+  // console.log('ID -->>', id);
+
+  const {rows: [name]} = await client.query(`
+    UPDATE activities
+    SET name='${fields.name}'
+    WHERE id = $1
+    RETURNING *;
+
+  `, [id]);
+  
+console.log('name ---->>>', name);
+  
+return name
+}
+
 
 module.exports = {
   getAllActivities,

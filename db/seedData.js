@@ -2,7 +2,6 @@
 const { createActivity,   
         getAllActivities,
         createUser,
-        getActivityById
         } = require('./');
 const client = require("./client")
 

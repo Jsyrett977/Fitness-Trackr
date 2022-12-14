@@ -11,6 +11,14 @@ async function getRoutineById(id){
 }
 
 async function getRoutinesWithoutActivities(){
+  const { rows } = await client.query(`
+    SELECT *
+    FROM routines
+    JOIN routine_activities
+    ON routines.id = routine_activities."routineId"
+    WHERE "activityId" NOT IN routine_activities
+    ;
+  `)
 }
 
 async function getAllRoutines() {
@@ -56,6 +64,12 @@ async function getAllPublicRoutines() {
 }
 
 async function getPublicRoutinesByActivity({id}) {
+  const {rows} = await client.query(`
+    SELECT *
+    FROM routines
+    JOIN routine_activities
+    ON 
+  `)
 }
 
 async function createRoutine({creatorId, isPublic, name, goal}) {
@@ -69,11 +83,15 @@ async function createRoutine({creatorId, isPublic, name, goal}) {
 }
 
 async function updateRoutine({id, ...fields}) {
-  console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',fields)
-  // const { rows: [updatedRoutine] } = await client.query(`
-  //   UPDATE routines
-  //   SET 
-  // `)
+  const {isPublic, name, goal} = fields;
+
+  const { rows: [updatedRoutine] } = await client.query(`
+    UPDATE routines
+    SET "isPublic" = $1, name = $2, goal = $3
+    WHERE is = $4
+    ;
+  `, [isPublic, name, goal, id])
+  return updatedRoutine;
 }
 
 async function destroyRoutine(id) {

@@ -1,5 +1,8 @@
 // require in the database adapter functions as you write them (createUser, createActivity...)
-// const { } = require('./');
+const { createActivity,   
+        getAllActivities,
+        createUser,
+        } = require('./');
 const client = require("./client")
 
 async function dropTables() {
@@ -212,6 +215,8 @@ async function createInitialRoutineActivities() {
   console.log("routine_activities created: ", routineActivities)
   console.log("Finished creating routine_activities!")
 }
+
+
 
 async function rebuildDB() {
   try {

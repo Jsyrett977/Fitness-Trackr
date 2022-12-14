@@ -1,3 +1,4 @@
+const { de } = require("faker/lib/locales");
 const client = require("./client");
 
 // database functions
@@ -92,23 +93,36 @@ async function createActivity({ name, description }) {
 // don't try to update the id
 // do update the name and description
 // return the updated activity
-async function updateActivity({ id, ...fields }) {
+  async function updateActivity({ id, ...fields }) {
 
-  // console.log('fields ---->>>', fields);
-  // console.log('ID -->>', id);
+    console.log('fields >>>>>>', fields);
 
-  const {rows: [name]} = await client.query(`
+    // const obj = {}
+
+    const setString = Object.keys(fields)
+    .map((key, index) => `"${key}"=$${index + 2}`).join(", ");
+
+    console.log("setString ---> ", setString);
+
+
+
+  try {
+    const {rows: [updated]} = await client.query(`
     UPDATE activities
-    SET name='${fields.name}'
+    SET ${setString}
     WHERE id = $1
     RETURNING *;
+  `, [id, ...Object.values(fields)]);
 
-  `, [id]);
+  console.log('updated ---->>>', updated);
+
   
-console.log('name ---->>>', name);
-  
-return name
-}
+  return updated
+  } catch (error) {
+    console.log('Error in updateActivity', error);
+    throw error
+  }
+  }
 
 
 module.exports = {

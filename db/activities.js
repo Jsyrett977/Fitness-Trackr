@@ -1,4 +1,3 @@
-const { de } = require("faker/lib/locales");
 const client = require("./client");
 
 // database functions
@@ -53,22 +52,33 @@ async function getActivityByName(name) {
 
 // select and return an array of all activities
 async function attachActivitiesToRoutines(routines) {
-  
-  // const { rows } = await client.query(`
-  //       SELECT *
-  //       FROM activities 
-  //       JOIN routines 
-  //         ON activity.id 
-  //       = routines.id;
-  //   `);
+    const routinesCopy = [...routines];
+    const stringPlaceholder = routines.map((_, index) => `$${index + 1}`).join(', ');
+    const routineIds = routines.map((routine) => routine.id);
+    if(!routineIds){
+      return
+    }
 
-
-
-  // console.log("joined table ----->>>>", rows);
-  // return rows;
+    
+      const { rows: activities } = await client.query(`
+        SELECT activities.*, routine_activities.duration, routine_activities.count,
+        routine_activities.id AS "routineActivityId", routine_activities."routineId"
+        FROM activities
+        JOIN routine_activities ON routine_activities."activityId" = activities.id
+        WHERE routine_activities."routineId" IN (${stringPlaceholder})
+        ;
+      `, routineIds);
+      for(const routine of routinesCopy){
+        const activitiesMatch = activities.filter((activity) => activity.routineId === routine.id )
+        routine.activities = activitiesMatch
+      }
+      return routinesCopy;
+    
+    
 }
 
 // return the new activity
+
 async function createActivity({ name, description }) {
   try {
     const {

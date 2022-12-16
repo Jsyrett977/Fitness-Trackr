@@ -1,7 +1,7 @@
 const client = require('./client')
 
 async function getRoutineActivityById(id){
-  const { rows: routineActivity } = await client.query(`
+  const { rows: [routineActivity] } = await client.query(`
     SELECT *
     FROM routine_activities
     WHERE id = $1
@@ -16,20 +16,21 @@ async function addActivityToRoutine({
   count,
   duration,
 }) {
-    const { rows } = await client.query(`
-      INSERT INTO routine_activities
+    const { rows: [routine] } = await client.query(`
+      INSERT INTO routine_activities("routineId", "activityId", count, duration)
       VALUES ($1, $2, $3, $4)
+      ON CONFLICT ("routineId", "activityId") DO NOTHING
       RETURNING *
       ;
     `, [routineId, activityId, count, duration])
-    return rows
+    return routine
 }
 
 async function getRoutineActivitiesByRoutine({id}) {
   const { rows } = await client.query(`
     SELECT *
     FROM routine_activities
-    WHERE id = $1
+    WHERE "routineId" = $1
     ;
   `, [id])
   return rows;
@@ -46,11 +47,13 @@ async function updateRoutineActivity ({id, ...fields}) {
 }
 
 async function destroyRoutineActivity(id) {
-  await client.query(`
+  const { rows: [routineActivity] }= await client.query(`
     DELETE FROM routine_activities
     WHERE id = $1
+    RETURNING *
     ;
   `, [id])
+  return routineActivity;
 }
 
 async function canEditRoutineActivity(routineActivityId, userId) {

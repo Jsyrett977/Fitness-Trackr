@@ -1,37 +1,74 @@
 const express = require('express');
-const { getAllActivities, getActivityById, createActivity } = require('../db/activities');
-const { getUserById, getUserByUsername } = require('../db/users');
+const { getAllActivities, getActivityById, createActivity, getActivityByName } = require('../db/activities');
+const { getPublicRoutinesByActivity } = require('../db/routines');
+const { getUserById, getUserByUsername, getUser } = require('../db/users');
 const router = express.Router();
 
-// GET /api/activities/:activityId/routines
-router.get('api/actvities/:activityId/routines', (req, res, next) => {
 
-   console.log('res--->', res);
+// GET /api/activities/:activityId/routines
+router.get('/api/activities/:activityId/routines', async (req, res, next) => {
+    const activityId = req.params.activityId;
+    const getPublicRoutines = await getPublicRoutinesByActivity({activityId});
+
+    if(getPublicRoutines){
+        res.send(getPublicRoutines)
+    } else {
+        res.status(404).send("Activity 10000 not found")
+    }
 })
 
 // GET /api/activities
-router.get('api/activities', (req, res, next) => {
-    const activities = getAllActivities();
-    res.send(activities)
+/// WORKING /////// WORKING ////
+router.get('/', async(req, res, next) => {
+    const activities = await getAllActivities();
+
+    try {
+        if(activities){
+            res.send(activities)
+        }
+    } catch (error) {
+        next()
+    }
+   
 })
 
 // POST /api/activities
-router.post('api/activities',(req, res, next) => {
-    const createActivity = createActivity();
-    const user = getUserByUsername();
+router.post('/', async (req, res, next) => {
+    
+    try {
+        const {name, description} = req.body
+        const existingActivity = await getActivityByName(name)
 
-    if(createActivity){
-        createActivity()
-    } else {
-        res.status(404).send("error creating activity")
+        
+        if(existingActivity){
+            next({
+                name: "name not found",
+                message: `An activity with name ${name} already exists`
+            })
+        } else {
+            const newActivity = await createActivity({name, description});
+    
+            if(newActivity){
+                res.send(newActivity)
+            } else {
+                next({
+                    name: "name not found",
+                    message: `There was an error creating the ${name} activity `
+                })
+            }
+        }
+    } catch (error) {
+        next(error)
     }
     
-    console.log(req)
+    
 })
+
 // PATCH /api/activities/:activityId
 
-router.patch('api/activities/:activityId', (req, res, next) => {
-    const activity = getActivityById(req.params.id)
+router.patch('/api/activities/:activityId', async (req, res, next) => {
+    const id = req.params.id
+    const activity = await getActivityById(id)
     // res.send(activity)
 
     if(activity){

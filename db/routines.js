@@ -130,6 +130,7 @@ module.exports = {
   getAllRoutinesByUser,
   getPublicRoutinesByUser,
   getPublicRoutinesByActivity,
+  attachActivitiesToRoutines,
   createRoutine,
   updateRoutine,
   destroyRoutine,

@@ -1,118 +1,169 @@
 const express = require('express');
 const usersRouter = express.Router();
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { getAllUsers, createUser, getUserByUsername } = require('../db.users');
-const {getPublicRoutinesByUser} = require('../db.routines')
+const bcrypt = require("bcrypt")
+const { JWT_SECRET = 'neverTell' } = process.env;
+const { getAllUsers, createUser, getUserByUsername, getAllRoutinesByUser, getPublicRoutinesByUser } = require('../db');
+
 
 
 
 // POST /api/users/login
 usersRouter.post('/login', async (req, res, next) => {
-    const { username, password } = req.body;
-  
-    if (!username || !password) {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    res.send({
+      name: "MissingCredentialsError",
+      message: "Please suppy both a username and password"
+    });
+  }
+  try {
+    const user = await getUserByUsername(username);
+    const hashedPassword = user.password
+    if (user && await bcrypt.compare(password, hashedPassword)) {
+      const jwtToken = jwt.sign(user, JWT_SECRET);
+      res.send({ user: user, token: jwtToken, message: "you're logged in!" });
+    } else {
       next({
-        name: "Missing Username or Password",
-        message: "Please supply both a username and password"
+        name: "IncorrectCredentialsError",
+        message: "Username or password is incorrect",
       });
     }
-    const token = jwt.sign({ id: 1, username: 'albert' }, process.env.JWT_SECRET);
-
-    try {
-      const user = await getUserByUsername(username, password);
-      const SALT_COUNT = 10;
-      const hashedPassword = await bcrypt.hash(password, SALT_COUNT);
-  
-      if (!user && !user.password == hashedPassword) {
-        res.send({
-          name: 'IncorrectCredentialsError',
-          message: 'Username or password is incorrect'
-        });
-  
-      } else {
-        next({
-          message: "you're logged in!", token
-  
-        });
-      }
-    } catch (error) {
-      console.log(error);
-      next(error);
-    }
-  });
+  } catch ({ name, message }) {
+    next({ name, message });
+  }
+});
 
 // POST /api/users/register
 usersRouter.post('/register', async (req, res, next) => {
   const { username, password } = req.body;
-
   try {
     const _user = await getUserByUsername(username);
-    const SALT_COUNT = 10;
-    const hashedPassword = await bcrypt.hash(password, SALT_COUNT);
-
     if (_user) {
-      next({
-        name: 'UserExistsError',
-        message: 'A user by that username already exists'
+      res.send({
+        error: "UserExistsError",
+        message: "User " + username + " is already taken.",
+        name: 'UsernameExists',
       });
-    }
-
-    const user = await createUser({username, hashedPassword});
-
-    if (password.length < 8) {
-      next({
-        password: "Password must be at least 8 characters"
+    } else if(password.length < 8) {
+      res.send({
+        error: "PasswordLengthError",
+        message: "Password Too Short!",
+        name: "Short Password",
       });
+      } else {
+      const user = await createUser({username, password});
+
+      if (user) {
+      const jwtToken = jwt.sign(user, JWT_SECRET);
+       const response =  {
+          message: "thank you for signing up",
+          token: jwtToken,
+          user: {
+            id: user.id,
+            username: user.username,
+          },
+        }
+        res.send(response);
+      }
     }
-
-    const token = jwt.sign({
-      id: user.id,
-      username
-    }, process.env.JWT_SECRET, {
-      expiresIn: '1w'
-    });
-
-    res.send({
-      message: "thank you for signing up",
-      token
-    });
   } catch ({ name, message }) {
     next({ name, message })
   }
 });
 
-// GET /api/users/me
-usersRouter.get('/users', async (req, res, next) => {
-  const { username } = req.params;
-  try {
-    const token = jwt.sign({username}, process.env.JWT_SECRET, {expiresIn:'1w'});
-    const currentUser = await getAllUsers({username,token});
-      if(!token) {
-        next({
-          message: "Invalid credentials"
-        })
-        res.send({currentUser})
-      } 
-    } catch (error) {
-        next(error);
-      }
-});
-// GET /api/users/:username/routines
-usersRouter.get('/:username/routines', async (req, res, next) => {
-  const {username} = req.params;
-  try{
-    const userRoutines = await getPublicRoutinesByUser(username);
-    if(!username) {
-      next({
-        username: "username does not exist",
-        routines: "public routines do not exist",
-        message: "There are no public routines for this user"
+function verifyToken(req, res, next) {
+  // Extract the token from the Authorization header
+  const authHeader = req.headers["authorization"];
+  if (!authHeader) {
+    // Return an error if the Authorization header is not present
+    return res.status(401).send({
+      error: "401 - Unauthorized",
+      message: "You must be logged in to perform this action",
+      name: "MissingTokenError",
+    });
+  }
+
+  const token = authHeader.split(" ")[1];
+  if (!token) {
+    // Return an error if the token is not present or is malformed
+    return res.status(401).send({
+      error: "401 - Unauthorized",
+      message: "Invalid token",
+      name: "MalformedTokenError",
+    });
+  }
+
+  // Verify the token
+  jwt.verify(token, JWT_SECRET, (error, user) => {
+    if (error) {
+      // Return an error if the token is invalid
+      return res.status(401).send({
+        error: "401 - Unauthorized",
+        message: "Invalid token",
+        name: "JWTError",
       });
-      res.send(userRoutines)
     }
-  } catch ({message}) {
-    return (username)
+    // Set the user in the request object and call the next middleware function
+    req.user = user;
+    next();
+  });
+}
+
+// GET /api/users/me
+usersRouter.get('/me', verifyToken, async (req, res, next) => {
+  try {
+    if (req.user) {
+      res.send(req.user);
+    } else {
+      res.status(401).send({
+        error: "401 - Unauthorized",
+        message: "You must be logged in to perform this action",
+        name: "UnauthorizedError",
+      });
+    }
+  } catch (error) {
+    next(error);
   }
 });
+
+
+// GET /api/users/:username/routines
+//necessary function
+
+// function requireUser(req, res, next) {
+//   if (!req.user) {
+//     res.status(401)
+//     res.send({
+//       error: "User not logged in",
+//       name: "MissingUserError",
+//       message: "You must be logged in to perform this action"
+//     });
+//   }
+//   next();
+// }
+
+
+usersRouter.get("/:username/routines", verifyToken, async (req, res, next) => {
+  try {
+    const {username} = req.params;
+    const user = await getUserByUsername(username);
+    if(!user) {
+      res.send({
+        name: 'NoUser',
+        message: `Error looking up user ${username}`
+      });
+    } else if(req.user && user.id === req.user.id) {
+      const routines = await getAllRoutinesByUser({username: username});
+      res.send(routines);
+    } else {
+      const routines = await getPublicRoutinesByUser({username: username});
+      res.send(routines);
+    }
+  } catch (error) {
+    next(error)
+  }
+})
+
+
 module.exports = usersRouter;

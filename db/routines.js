@@ -27,7 +27,7 @@ async function getAllRoutines() {
     SELECT routines.*, users.username AS "creatorName"
     FROM routines
     JOIN users
-    ON routines."creatorId" = users.id
+      ON routines."creatorId" = users.id
     ;
   `)
   return attachActivitiesToRoutines(routines)
@@ -38,7 +38,7 @@ async function getAllRoutinesByUser({username}) {
   SELECT routines.*, users.username AS "creatorName"
   FROM routines
   JOIN users
-  ON routines."creatorId" = users.id
+    ON routines."creatorId" = users.id
   WHERE username = $1
   `, [username])
   return attachActivitiesToRoutines(routines)
@@ -95,23 +95,31 @@ async function createRoutine({creatorId, isPublic, name, goal}) {
 }
 
 async function updateRoutine({id, ...fields}) {
-  const {isPublic, name, goal} = fields;
-
+  
+  const setString = Object.keys(fields)
+    .map((key, index) => `"${key}"=$${index + 2}`).join(", ");
   const { rows: [updatedRoutine] } = await client.query(`
     UPDATE routines
-    SET "isPublic" = $1, name = $2, goal = $3
-    WHERE id = $4
+    SET ${setString}
+    WHERE id = $1
+    RETURNING *
     ;
-  `, [isPublic, name, goal, id])
+  `, [id, ...Object.values(fields)])
   return updatedRoutine;
 }
 
 async function destroyRoutine(id) {
   await client.query(`
+    DELETE FROM routine_activities
+    WHERE "routineId" = $1
+    ;
+  `, [id])
+  await client.query(`
     DELETE FROM routines
     WHERE id = $1
     ;
   `, [id])
+  
 }
 
 module.exports = {

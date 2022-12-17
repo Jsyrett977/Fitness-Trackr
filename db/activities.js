@@ -61,8 +61,12 @@ async function attachActivitiesToRoutines(routines) {
 
     
       const { rows: activities } = await client.query(`
-        SELECT activities.*, routine_activities.duration, routine_activities.count,
-        routine_activities.id AS "routineActivityId", routine_activities."routineId"
+        SELECT 
+          activities.*,
+          routine_activities.duration,
+          routine_activities.count,
+          routine_activities.id AS "routineActivityId",
+          routine_activities."routineId"
         FROM activities
         JOIN routine_activities ON routine_activities."activityId" = activities.id
         WHERE routine_activities."routineId" IN (${stringPlaceholder})

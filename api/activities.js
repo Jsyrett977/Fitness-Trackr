@@ -1,31 +1,29 @@
 const express = require('express');
 const { getAllActivities, getActivityById, createActivity, getActivityByName } = require('../db/activities');
 const { getPublicRoutinesByActivity } = require('../db/routines');
-const { verifyToken } = require('../db/users');
+const { requireUser } = require('./utils');
 const router = express.Router();
 
 
 // GET /api/activities/:activityId/routines
-router.get('/api/activities/:activityId/routines', async (req, res, next) => {
-
+router.get('/:activityId/routines', async (req, res, next) => {
     try {
-        const activityId = req.params.activityId;
-        const activities = await getAllActivities();
-        const getPublicRoutines = await getPublicRoutinesByActivity({activityId});
-
-    if(activities){
-        res.send(getPublicRoutines)
-    } 
-
-    } catch (error) {
-        console.log('error in GET activities with id',error);
-        next({
-            name: "cant get public routines with that id",
-            message: `There was an error getting the activity with that ${id}`
-        })
+      const id = req.params.activityId;
+      const activity = await getActivityById(id);
+      if (!activity) {
+        res.send({
+          message: `Activity ${id} not found`,
+          name: 'ActivityDoesNotExistError',
+          error: 'Activity does not exist',
+        });
+        return;
+      }
+      const routines = await getPublicRoutinesByActivity(activity);
+      res.send(routines);
+    } catch ({ name, message }) {
+      next({ name, message });
     }
-    
-});
+  });
 
 // GET /api/activities
 /// WORKING /////// WORKING //// /// WORKING /////// WORKING //// /// WORKING /////// WORKING //// 

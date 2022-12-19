@@ -78,7 +78,7 @@ router.post('/', async (req, res, next) => {
     
     
 })
-
+//
 // PATCH /api/activities/:activityId
 
 router.patch('/api/activities/:activityId', async (req, res, next) => {

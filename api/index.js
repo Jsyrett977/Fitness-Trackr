@@ -8,7 +8,6 @@ router.get('/health', (req, res) => {
     });
   });
 
-  
 
 // ROUTER: /api/users
 const usersRouter = require('./users');

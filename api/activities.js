@@ -1,28 +1,29 @@
 const express = require('express');
 const { getAllActivities, getActivityById, createActivity, getActivityByName } = require('../db/activities');
 const { getPublicRoutinesByActivity } = require('../db/routines');
-const { verifyToken } = require('../db/users');
+const { requireUser } = require('./utils');
 const router = express.Router();
 
 
 // GET /api/activities/:activityId/routines
-router.get('/api/activities/:activityId/routines', async (req, res, next) => {
+router.get('/:activityId/routines', async (req, res, next) => {
     try {
       const id = req.params.activityId;
-      const activity = { id: id };
-      const routines = await getPublicRoutinesByActivity(activity);
-      if (routines.length === 0)
+      const activity = await getActivityById(id);
+      if (!activity) {
         res.send({
           message: `Activity ${id} not found`,
           name: 'ActivityDoesNotExistError',
           error: 'Activity does not exist',
         });
+        return;
+      }
+      const routines = await getPublicRoutinesByActivity(activity);
       res.send(routines);
     } catch ({ name, message }) {
       next({ name, message });
     }
-  })
-
+  });
 
 // GET /api/activities
 /// WORKING /////// WORKING //// /// WORKING /////// WORKING //// /// WORKING /////// WORKING //// 

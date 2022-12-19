@@ -7,18 +7,30 @@ const router = express.Router();
 
 // GET /api/activities/:activityId/routines
 router.get('/api/activities/:activityId/routines', async (req, res, next) => {
-    const activityId = req.params.activityId;
-    const getPublicRoutines = await getPublicRoutinesByActivity({activityId});
 
-    if(getPublicRoutines){
+    try {
+        const activityId = req.params.activityId;
+        const activities = await getAllActivities();
+        const getPublicRoutines = await getPublicRoutinesByActivity({activityId});
+
+    if(activities){
         res.send(getPublicRoutines)
-    } else {
-        res.status(404).send("Activity 10000 not found")
+    } 
+
+    } catch (error) {
+        console.log('error in GET activities with id',error);
+        next({
+            name: "cant get public routines with that id",
+            message: `There was an error getting the activity with that ${id}`
+        })
     }
-})
+    
+});
 
 // GET /api/activities
-/// WORKING /////// WORKING ////
+/// WORKING /////// WORKING //// /// WORKING /////// WORKING //// /// WORKING /////// WORKING //// 
+/// WORKING /////// WORKING //// /// WORKING /////// WORKING //// /// WORKING /////// WORKING //// 
+/// WORKING /////// WORKING //// /// WORKING /////// WORKING //// /// WORKING /////// WORKING //// 
 router.get('/', async(req, res, next) => {
     const activities = await getAllActivities();
 
@@ -33,6 +45,9 @@ router.get('/', async(req, res, next) => {
 })
 
 // POST /api/activities
+/// WORKING /////// WORKING //// /// WORKING /////// WORKING //// /// WORKING /////// WORKING //// 
+/// WORKING /////// WORKING //// /// WORKING /////// WORKING //// /// WORKING /////// WORKING //// 
+/// WORKING /////// WORKING //// /// WORKING /////// WORKING //// /// WORKING /////// WORKING //// 
 router.post('/', async (req, res, next) => {
     
     try {

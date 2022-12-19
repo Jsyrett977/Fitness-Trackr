@@ -91,6 +91,7 @@ async function createActivity({ name, description }) {
       `
       INSERT INTO activities (name,description)
       VALUES ($1, $2)
+      ON CONFLICT (name) DO NOTHING
       RETURNING *;
   `,
       [name, description]
@@ -119,7 +120,7 @@ async function createActivity({ name, description }) {
     console.log("setString ---> ", setString);
 
 
-
+//
   try {
     const {rows: [updated]} = await client.query(`
     UPDATE activities

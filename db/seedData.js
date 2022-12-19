@@ -4,7 +4,7 @@ const { createActivity,
         createUser,
         createRoutine,
         getRoutinesWithoutActivities,
-        addActivityToRoutine,
+        addActivityToRoutine
         } = require('./');
 const client = require("./client")
 

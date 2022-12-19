@@ -1,15 +1,24 @@
 const express = require('express');
+const { verify } = require('jsonwebtoken');
 const routinesRouter = express.Router();
 const { getAllPublicRoutines, createRoutine, updateRoutine } = require('../db/routines')
+const { verifyToken } = require('./users')
 // GET /api/routines
 routinesRouter.get('/', async (req, res) => {
     const publicRoutines = await getAllPublicRoutines();
     res.send(publicRoutines)
 })
+const requireUser = (req, res, next) => {
+    if(!req.user){
+        next({
+            name: "MissingUser",
+            message: "You must be logged in to continue"
+        })
+    }
+    next();
+}
 // POST /api/routines
-routinesRouter.post('/', async (req, res) => {
-    console.log(req.body)
-    console.log(req.user)
+routinesRouter.post('/', requireUser, async (req, res) => {
     const { isPublic, name, goal } = req.body;
     const creatorId = req.user.id;
     if(!creatorId){
@@ -25,7 +34,9 @@ routinesRouter.patch("/:routineId", async (req, res, next) => {
     try {
 
       const updateFields = { id: routineId, ...req.body };
-  
+      if(!updateFields){
+        res.status(404).send({message: "Missing Fields"})
+      }
       const updatedRoutine = await updateRoutine(updateFields);
       res.send(updatedRoutine);
     } catch ({ name, message }) {

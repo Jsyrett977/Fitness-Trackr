@@ -10,33 +10,26 @@ router.get('/health', (req, res) => {
     message: 'All is well'
   });
 });
-
-module.exports = router;
-
-
 router.use(async (req, res, next) => {
-    const prefix = "Bearer";
-    const auth = req.header("Authorization");
-  
-    if (!auth) {
-      next();
-    } else if (auth.startsWith(prefix)) {
-      const token = auth.slice(prefix.length);
-      try {
-        const data = jwt.verify(token, JWT_SECRET);
-          req.user = await getUserById(data.id);
-          next();
-      } catch (error) {
-        next(error);
-      }
-    } else {
-      next({
-        name: "AuthorizationHeaderError",
-        message: `Authorization token must start with ${prefix}`,
-      });
+    const prefix = 'Bearer ';
+    const auth = req.header('Authorization')
+
+    if(auth){
+        const [_, token] = auth.split(' ');
+        const data = jwt.verify(token, JWT_SECRET)
+        const user = await getUserById(data.id);
+        req.user = user;
+        next();
+    }else if (!auth){
+        next()
+    }else{
+        next({
+            error: "Auth Header Error",
+            message: 'Token must start with Bearer'
+        })
     }
-  });
-  
+})
+
 // ROUTER: /api/users
 const usersRouter = require('./users');
 router.use('/users', usersRouter);

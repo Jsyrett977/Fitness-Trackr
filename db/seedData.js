@@ -2,6 +2,9 @@
 const { createActivity,   
         getAllActivities,
         createUser,
+        createRoutine,
+        getRoutinesWithoutActivities,
+        addActivityToRoutine
         } = require('./');
 const client = require("./client")
 

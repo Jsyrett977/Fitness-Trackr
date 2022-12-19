@@ -1,5 +1,6 @@
 
-function requireUser(req, res, next) {    if (!req.user) {
+function requireUser(req, res, next) {    
+    if (!req.user) {
           res.status(401).send({
           error: "User not logged in",
           name: "MissingUserError", 

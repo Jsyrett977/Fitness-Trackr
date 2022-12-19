@@ -1,7 +1,7 @@
 const express = require('express');
 const { getAllActivities, getActivityById, createActivity, getActivityByName } = require('../db/activities');
 const { getPublicRoutinesByActivity } = require('../db/routines');
-const { getUserById, getUserByUsername, getUser } = require('../db/users');
+const { getUserById, getUserByUsername, getUser, verifyToken } = require('../db/users');
 const router = express.Router();
 
 

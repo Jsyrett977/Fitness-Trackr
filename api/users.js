@@ -3,7 +3,7 @@ const usersRouter = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require("bcrypt")
 const { JWT_SECRET = 'neverTell' } = process.env;
-const { getAllUsers, createUser, getUserByUsername, getAllRoutinesByUser, getPublicRoutinesByUser } = require('../db');
+const { createUser, getUserByUsername, getAllRoutinesByUser, getPublicRoutinesByUser } = require('../db');
 
 
 
@@ -129,19 +129,7 @@ usersRouter.get('/me', verifyToken, async (req, res, next) => {
 
 
 // GET /api/users/:username/routines
-//necessary function
 
-// function requireUser(req, res, next) {
-//   if (!req.user) {
-//     res.status(401)
-//     res.send({
-//       error: "User not logged in",
-//       name: "MissingUserError",
-//       message: "You must be logged in to perform this action"
-//     });
-//   }
-//   next();
-// }
 
 
 usersRouter.get("/:username/routines", verifyToken, async (req, res, next) => {

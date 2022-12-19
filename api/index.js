@@ -32,6 +32,7 @@ router.get('/health', async (req, res, next) => {
 //     }
 //   });
   
+
 // ROUTER: /api/users
 const usersRouter = require('./users');
 router.use('/users', usersRouter);

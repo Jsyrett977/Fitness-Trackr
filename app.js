@@ -1,4 +1,3 @@
-
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -34,5 +33,19 @@ app.use((error, req, res, next) => {
 })
 
 
+
+// Catch-all route
+app.use((req, res) => {
+  res.status(404).send({ message: "Resource not found" });
+});
+
+// Error handling middleware
+app.use((error, req, res, next) => {
+  res.status(500).send({
+    message: error.message,
+    name: error.name,
+    error: error.toString(),
+  });
+});
 
 module.exports = app;

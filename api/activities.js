@@ -1,31 +1,33 @@
 const express = require('express');
-const { getAllActivities, getActivityById, createActivity, getActivityByName } = require('../db/activities');
+const { getAllActivities, getActivityById, createActivity, getActivityByName, updateActivity } = require('../db/activities');
 const { getPublicRoutinesByActivity } = require('../db/routines');
-const { verifyToken } = require('../db/users');
+const { requireUser } = require('./utils');
+const { ActivityNotFoundError, ActivityExistsError } = require("../errors");
 const router = express.Router();
 
 
 // GET /api/activities/:activityId/routines
-router.get('/api/activities/:activityId/routines', async (req, res, next) => {
-
+/// WORKING /////// WORKING //// /// WORKING /////// WORKING //// /// WORKING /////// WORKING //// 
+/// WORKING /////// WORKING //// /// WORKING /////// WORKING //// /// WORKING /////// WORKING //// 
+/// WORKING /////// WORKING //// /// WORKING /////// WORKING //// /// WORKING /////// WORKING //// 
+router.get('/:activityId/routines', async (req, res, next) => {
     try {
-        const activityId = req.params.activityId;
-        const activities = await getAllActivities();
-        const getPublicRoutines = await getPublicRoutinesByActivity({activityId});
-
-    if(activities){
-        res.send(getPublicRoutines)
-    } 
-
-    } catch (error) {
-        console.log('error in GET activities with id',error);
-        next({
-            name: "cant get public routines with that id",
-            message: `There was an error getting the activity with that ${id}`
-        })
+      const id = req.params.activityId;
+      const activity = await getActivityById(id);
+      if (!activity) {
+        res.send({
+          message: `Activity ${id} not found`,
+          name: 'ActivityDoesNotExistError',
+          error: 'Activity does not exist',
+        });
+        return;
+      }
+      const routines = await getPublicRoutinesByActivity(activity);
+      res.send(routines);
+    } catch ({ name, message }) {
+      next({ name, message });
     }
-    
-});
+  });
 
 // GET /api/activities
 /// WORKING /////// WORKING //// /// WORKING /////// WORKING //// /// WORKING /////// WORKING //// 
@@ -45,54 +47,88 @@ router.get('/', async(req, res, next) => {
 })
 
 // POST /api/activities
-/// WORKING /////// WORKING //// /// WORKING /////// WORKING //// /// WORKING /////// WORKING //// 
-/// WORKING /////// WORKING //// /// WORKING /////// WORKING //// /// WORKING /////// WORKING //// 
-/// WORKING /////// WORKING //// /// WORKING /////// WORKING //// /// WORKING /////// WORKING //// 
-router.post('/', async (req, res, next) => {
-    
+router.post("/", async (req, res, next) => {
     try {
-        const {name, description} = req.body
-        const existingActivity = await getActivityByName(name)
-
-        
-        if(existingActivity){
-            next({
-                name: "name not found",
-                message: `An activity with name ${name} already exists`
-            })
-        } else {
-            const newActivity = await createActivity({name, description});
-    
-            if(newActivity){
-                res.send(newActivity)
-            } else {
-                next({
-                    name: "name not found",
-                    message: `There was an error creating the ${name} activity `
-                })
-            }
-        }
+      const { name, description } = req.body;
+      const existingActivity = await getActivityByName(name);
+  
+      if (existingActivity) {
+        // Respond with an error if an activity with the same name already exists
+        const error = new ActivityExistsError(name);
+        error.name = "ActivityExistsError";
+        error.error = "An activity with name " + name + " already exists";
+        return next(error);
+      }
+  
+      // Create the new activity
+      const newActivity = await createActivity({ name, description });
+  
+      if (newActivity) {
+        res.send(newActivity);
+      } else {
+        // Respond with an error if there was an issue creating the activity
+        const error = new Error(`There was an error creating the "${name}" activity`);
+        error.name = "Error";
+        error.error = `There was an error creating the "${name}" activity`;
+        return next(error);
+      }
     } catch (error) {
-        next(error)
+      next(error);
     }
-    
-    
-})
-
+  });
+  
+  
+  
+//
 // PATCH /api/activities/:activityId
-
-router.patch('/api/activities/:activityId', async (req, res, next) => {
-    const id = req.params.id
-    const activity = await getActivityById(id)
-    // res.send(activity)
-
-    if(activity){
-        res.send(activity)
-    } else {
-        res.status(404).send('activity with that id not found')
+// PATCH /api/activities/:activityId
+router.patch('/:activityId', async (req, res, next) => {
+    const { name, description } = req.body;
+    const updateFields = {};
+    if (name) {
+      updateFields.name = name;
     }
-    
-    console.log('res --->', res)
-})
+    if (description) {
+      updateFields.description = description;
+    }
+    try {
+      const id = req.params.activityId;
+      const existingActivity = await getActivityById(id);
+  
+      if (!existingActivity) {
+        // Respond with an error if the activity does not exist
+        const error = new Error(`Activity ${id} not found`);
+        error.name = "ActivityNotFoundError";
+        throw error;
+      }
+  
+      // Check if there is an existing activity with the new name
+      const existingActivityWithNewName = await getActivityByName(req.body.name);
+      if (existingActivityWithNewName) {
+        // Respond with an error if there is an existing activity with the same name
+        const error = new Error(`An activity with name ${req.body.name} already exists`);
+        error.name = "ActivityExistsError";
+        throw error;
+      }
+  
+      // Update the activity
+      const updatedActivity = await updateActivity(id, req.body);
+  
+      if (updatedActivity) {
+        res.send(updatedActivity);
+      } else {
+        // Respond with an error if there was an issue updating the activity
+        const error = new Error(`There was an error updating the "${req.body.name}" activity`);
+        error.name = "Error";
+        error.error = `There was an error updating the "${req.body.name}" activity`;
+        throw error;
+      }
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  
 
 module.exports = router;
+

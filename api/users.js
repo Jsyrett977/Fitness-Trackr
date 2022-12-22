@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require("bcrypt")
 const { JWT_SECRET = 'neverTell' } = process.env;
 const { createUser, getUserByUsername, getAllRoutinesByUser, getPublicRoutinesByUser } = require('../db');
+const { requireUser } = require('./utils')
+const { createUser, getUserByUsername, getAllRoutinesByUser, getPublicRoutinesByUser } = require('../db');
 
 
 
@@ -72,46 +74,9 @@ usersRouter.post('/register', async (req, res, next) => {
   }
 });
 
-function verifyToken(req, res, next) {
-  // Extract the token from the Authorization header
-  const authHeader = req.headers["authorization"];
-  if (!authHeader) {
-    // Return an error if the Authorization header is not present
-    return res.status(401).send({
-      error: "401 - Unauthorized",
-      message: "You must be logged in to perform this action",
-      name: "MissingTokenError",
-    });
-  }
-
-  const token = authHeader.split(" ")[1];
-  if (!token) {
-    // Return an error if the token is not present or is malformed
-    return res.status(401).send({
-      error: "401 - Unauthorized",
-      message: "Invalid token",
-      name: "MalformedTokenError",
-    });
-  }
-
-  // Verify the token
-  jwt.verify(token, JWT_SECRET, (error, user) => {
-    if (error) {
-      // Return an error if the token is invalid
-      return res.status(401).send({
-        error: "401 - Unauthorized",
-        message: "Invalid token",
-        name: "JWTError",
-      });
-    }
-    // Set the user in the request object and call the next middleware function
-    req.user = user;
-    next();
-  });
-}
 
 // GET /api/users/me
-usersRouter.get('/me', verifyToken, async (req, res, next) => {
+usersRouter.get('/me', requireUser, async (req, res, next) => {
   try {
     if (req.user) {
       res.send(req.user);
@@ -123,6 +88,7 @@ usersRouter.get('/me', verifyToken, async (req, res, next) => {
       });
     }
   } catch (error) {
+    res.status(500)
     next(error);
   }
 });
@@ -132,7 +98,7 @@ usersRouter.get('/me', verifyToken, async (req, res, next) => {
 
 
 
-usersRouter.get("/:username/routines", verifyToken, async (req, res, next) => {
+usersRouter.get("/:username/routines", requireUser, async (req, res, next) => {
   try {
     const {username} = req.params;
     const user = await getUserByUsername(username);

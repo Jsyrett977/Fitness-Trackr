@@ -120,7 +120,7 @@ async function createActivity({ name, description }) {
     console.log("setString ---> ", setString);
 
 
-
+//
   try {
     const {rows: [updated]} = await client.query(`
     UPDATE activities

@@ -5,8 +5,6 @@ const bcrypt = require("bcrypt")
 const { JWT_SECRET = 'neverTell' } = process.env;
 const { createUser, getUserByUsername, getAllRoutinesByUser, getPublicRoutinesByUser } = require('../db');
 const { requireUser } = require('./utils')
-const { createUser, getUserByUsername, getAllRoutinesByUser, getPublicRoutinesByUser } = require('../db');
-
 
 
 

@@ -46,44 +46,41 @@ router.get('/', async(req, res, next) => {
    
 })
 
+
 // POST /api/activities
-router.post("/", async (req, res, next) => {
+/// WORKING /////// WORKING //// /// WORKING /////// WORKING //// /// WORKING /////// WORKING //// 
+/// WORKING /////// WORKING //// /// WORKING /////// WORKING //// /// WORKING /////// WORKING //// 
+/// WORKING /////// WORKING //// /// WORKING /////// WORKING //// /// WORKING /////// WORKING //// 
+router.post('/', async (req, res, next) => {
     try {
-      const { name, description } = req.body;
-      const existingActivity = await getActivityByName(name);
-  
-      if (existingActivity) {
-        // Respond with an error if an activity with the same name already exists
-        const error = new ActivityExistsError(name);
-        error.name = "ActivityExistsError";
-        error.error = "An activity with name " + name + " already exists";
-        return next(error);
-      }
-  
-      // Create the new activity
-      const newActivity = await createActivity({ name, description });
-  
-      if (newActivity) {
-        res.send(newActivity);
-      } else {
-        // Respond with an error if there was an issue creating the activity
-        const error = new Error(`There was an error creating the "${name}" activity`);
-        error.name = "Error";
-        error.error = `There was an error creating the "${name}" activity`;
-        return next(error);
-      }
+        const {name, description} = req.body
+        const existingActivity = await getActivityByName(name)
+        if(existingActivity){
+            next({
+                name: "name not found",
+                message: `An activity with name ${name} already exists`
+            })
+        } else {
+            const newActivity = await createActivity({name, description});
+            if(newActivity){
+                res.send(newActivity)
+            } else {
+                next({
+                    name: "name not found",
+                    message: `There was an error creating the ${name} activity `
+                })
+            }
+        }
     } catch (error) {
-      next(error);
+        next(error)
     }
-  });
+})
+
   
-  
-  
-//
-// PATCH /api/activities/:activityId
 // PATCH /api/activities/:activityId
 router.patch('/:activityId', async (req, res, next) => {
     const { name, description } = req.body;
+
     const updateFields = {};
     if (name) {
       updateFields.name = name;
@@ -91,6 +88,7 @@ router.patch('/:activityId', async (req, res, next) => {
     if (description) {
       updateFields.description = description;
     }
+
     try {
       const id = req.params.activityId;
       const existingActivity = await getActivityById(id);
